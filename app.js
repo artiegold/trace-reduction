@@ -1,3 +1,5 @@
 const { sample } = require('./src/reducetrace');
 
-const done = (() => sample())().then(console.log('done'));
+(async () => {
+    console.log(await sample());
+})();

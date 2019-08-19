@@ -1,42 +1,34 @@
-const asyncRedis = require("async-redis");
-let client;
+const {pushItem, result, init} = require('./redisInterface');
+let parserFunc;
 
 const getBucket = time => Math.floor(time / 100) * 100;
 
-async function init() {
-  client = asyncRedis.createClient();
-  client.on("error", error => console.error("redis error: " + error));
-  await client.flushall();
+async function initMe(parser) {
+  parserFunc = parser;
+  init();
 }
 
-async function pushItem(bucket, link) {
-  await client.zadd("bucketList", bucket, bucket);
-  await client.sadd(bucket, link);
-}
+const parser = (secondsPerBucket) => (item) => ({
+  time: Math.floor(item.time / secondsPerBucket) * secondsPerBucket,
+  link: item.link 
+});
 
-async function result() {
-  const bucketsRaw = await client.zscan('bucketList', 0);
-  const bucket2s = Array.from(new Set(bucketsRaw[1]));
-  bucket2s.forEach(async k => {
-    const values = await client.smembers(k);
-    values.forEach(v => console.log(k + ' ' + v));
-  });
-};
+const showResults = (k, v) => console.log(`time: ${k} link: ${v}`);
 
 async function sample() {
-  await init();
-  await[
+  await initMe(parser(300));
+  [
     { time: 23425332, link: "linkone" },
     { time: 23425300, link: "linktwo" },
-    { time: 23532301, link: "linkthree" },
-    { time: 23532341, link: "linkthree" },
+    { time: 23534301, link: "linkthree" },
+    { time: 23537341, link: "linkthree" },
     { time: 23532345, link: "linkone" },
     { time: 23532453, link: "linktwo"}
-  ].forEach(item => {
-    pushItem(getBucket(item.time), item.link);
-    console.log("link: " + item.link + " pushed to bucket: " + getBucket(item.time));
+  ].forEach(async item => {
+    const parsed = parserFunc(item);
+    await pushItem(parsed.time, parsed.link);
   });
-  await result();
+  return await result(showResults);
 }
 
 module.exports = {
