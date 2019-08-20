@@ -1,11 +1,13 @@
-const nReadlines = const lineByLine = require('n-readlines');
+const nReadlines = require('n-readlines');
 
 const process = (filenames, func) => {
     filenames.forEach(f => {
-        const reader = new nReadLines(filename);
+        const reader = new nReadlines(f);
         let line;
         while (line = reader.next()) {
             func(line);
         }
     })
 }
+
+module.exports = {process};
