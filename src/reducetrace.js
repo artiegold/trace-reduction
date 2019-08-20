@@ -1,9 +1,7 @@
 const {pushItem, result, init} = require('./redisInterface');
 let parserFunc;
 
-const getBucket = time => Math.floor(time / 100) * 100;
-
-async function initMe(parser) {
+function initMe(parser) {
   parserFunc = parser;
   init();
 }
@@ -15,6 +13,11 @@ const parser = (secondsPerBucket) => (item) => ({
 
 const showResults = (k, v) => console.log(`time: ${k} link: ${v}`);
 
+const bucketize = (item) => {
+  const pieces = item.split(',');
+  return {time: pieces[0], link: pieces[1]};
+}
+
 async function sample() {
   await initMe(parser(300));
   [
@@ -24,11 +27,11 @@ async function sample() {
     { time: 23537341, link: "linkthree" },
     { time: 23532345, link: "linkone" },
     { time: 23532453, link: "linktwo"}
-  ].forEach(async item => {
+  ].forEach(item => {
     const parsed = parserFunc(item);
-    await pushItem(parsed.time, parsed.link);
+    pushItem(parsed.time, parsed.link);
   });
-  return await result(showResults);
+  return result(showResults);
 }
 
 module.exports = {

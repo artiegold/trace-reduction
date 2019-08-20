@@ -19,8 +19,7 @@ async function result(f) {
     indicator = bucketsRaw[0];
     const bucket2s = Array.from(new Set(bucketsRaw[1]));
     bucket2s.forEach(async k => {
-      const values = await client.smembers(k);
-      values.forEach(v => f(k,v));
+      (await client.smembers(k)).forEach(v => f(k,v));
     });
     console.log(indicator);
   }
