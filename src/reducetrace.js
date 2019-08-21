@@ -16,7 +16,8 @@ const parser = secondsPerBucket => raw => {
 
 const showResults = (k, v) => console.log(`time: ${k} link: ${v}`);
 
-const bucketize = (item) => {
+const bucketize = item => {
+  console.log(typeof item);
   const pieces = item.split(',');
   return {time: pieces[0], link: pieces[1]};
 }
