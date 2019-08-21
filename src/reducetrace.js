@@ -6,10 +6,13 @@ function initMe(parser) {
   init();
 }
 
-const parser = (secondsPerBucket) => (item) => ({
-  time: Math.floor(item.time / secondsPerBucket) * secondsPerBucket,
-  link: item.link 
-});
+const parser = secondsPerBucket => raw => {
+  const item = bucketize(raw); console.log(item);
+  return {
+    time: Math.floor(item.time / secondsPerBucket) * secondsPerBucket,
+    link: item.link 
+  };
+};
 
 const showResults = (k, v) => console.log(`time: ${k} link: ${v}`);
 
@@ -35,5 +38,6 @@ async function sample() {
 }
 
 module.exports = {
-  sample
+  sample,
+  parser
 };

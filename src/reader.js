@@ -5,7 +5,8 @@ const process = (filenames, func) => {
         const reader = new nReadlines(f);
         let line;
         while (line = reader.next()) {
-            func(line);
+            console.log(`applying func to ${line}`);
+            console.log(rslt);
         }
     })
 }

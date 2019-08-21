@@ -1,7 +1,8 @@
-const { sample } = require('./src/reducetrace');
+const { sample, parser } = require('./src/reducetrace');
 const { process } = require('./src/reader');
 
-process(['./utils/logs/file1', './utils/logs/file2'], item => {console.log(item.toString('ascii'))});
+
+process(['./utils/logs/file1', './utils/logs/file2'], item => console.log(parser(300)(item)));
 
 
 // (async () => {
