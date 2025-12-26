@@ -1,0 +1,582 @@
+openapi: 3.0.3
+info:
+  title: Ticket Processor API
+  description: |
+    RESTful API for managing support tickets with multiple assignees.
+    
+    ## Features
+    - Multiple assignees per ticket (up to 50)
+    - Status tracking and transitions
+    - Priority management
+    - Soft delete functionality
+    - Comprehensive validation
+    
+    ## Authentication
+    Currently no authentication is required (development mode).
+  version: 1.0.0
+  contact:
+    name: Ticket Processor Team
+    email: support@ticketprocessor.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:4000/api
+    description: Development server
+  - url: https://api.ticketprocessor.com/api
+    description: Production server
+
+paths:
+  /tickets:
+    get:
+      summary: List all tickets
+      description: Retrieve a list of all tickets with optional filtering
+      tags:
+        - Tickets
+      parameters:
+        - name: status
+          in: query
+          description: Filter tickets by status
+          required: false
+          schema:
+            type: string
+            enum: [open, in_progress, resolved, closed, discarded]
+      responses:
+        '200':
+          description: List of tickets retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a new ticket
+      description: Create a new support ticket with the provided details
+      tags:
+        - Tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+          headers:
+            Location:
+              description: URL of the newly created ticket
+              schema:
+                type: string
+                format: uri
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tickets/{id}:
+    get:
+      summary: Get a specific ticket
+      description: Retrieve details of a specific ticket by ID
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update a ticket
+      description: Update ticket details
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketRequest'
+      responses:
+        '200':
+          description: Ticket updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Discard a ticket
+      description: Soft delete a ticket by marking it as discarded
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket discarded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ticket discarded successfully"
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tickets/{id}/assign:
+    put:
+      summary: Add an assignee to a ticket
+      description: Add a new assignee to the ticket's assignee list
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssigneeRequest'
+      responses:
+        '200':
+          description: Assignee added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tickets/{id}/remove_assignee:
+    put:
+      summary: Remove an assignee from a ticket
+      description: Remove an assignee from the ticket's assignee list
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssigneeRequest'
+      responses:
+        '200':
+          description: Assignee removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tickets/{id}/resolve:
+    put:
+      summary: Resolve a ticket
+      description: Mark a ticket as resolved
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket resolved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tickets/{id}/close:
+    put:
+      summary: Close a ticket
+      description: Mark a ticket as closed
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket closed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tickets/{id}/discard:
+    put:
+      summary: Discard a ticket
+      description: Mark a ticket as discarded
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Ticket ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket discarded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the ticket
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          description: Ticket title
+          example: "Database connection issue"
+        description:
+          type: string
+          description: Detailed description of the issue
+          example: "Cannot connect to PostgreSQL database from the application"
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        priority:
+          $ref: '#/components/schemas/TicketPriority'
+        assigned_to:
+          type: array
+          items:
+            type: string
+            format: email
+          description: List of assignee email addresses
+          example: ["alice@example.com", "bob@example.com"]
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the ticket was created
+          example: "2023-12-25T20:05:03Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the ticket was last updated
+          example: "2023-12-25T20:10:15Z"
+      required:
+        - id
+        - title
+        - description
+        - status
+        - priority
+        - created_at
+        - updated_at
+
+    TicketStatus:
+      type: string
+      enum: [open, in_progress, resolved, closed, discarded]
+      description: Current status of the ticket
+      example: "open"
+
+    TicketPriority:
+      type: string
+      enum: [low, medium, high, urgent]
+      description: Priority level of the ticket
+      example: "high"
+
+    CreateTicketRequest:
+      type: object
+      properties:
+        ticket:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Ticket title
+              example: "Database connection issue"
+            description:
+              type: string
+              description: Detailed description of the issue
+              example: "Cannot connect to PostgreSQL database"
+            priority:
+              $ref: '#/components/schemas/TicketPriority'
+            assigned_to:
+              type: array
+              items:
+                type: string
+                format: email
+              description: List of assignee email addresses
+              example: ["alice@example.com", "bob@example.com"]
+          required:
+            - title
+            - description
+            - priority
+      required:
+        - ticket
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        ticket:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Updated ticket title
+              example: "Updated database connection issue"
+            description:
+              type: string
+              description: Updated description
+              example: "Cannot connect to PostgreSQL database - updated details"
+            priority:
+              $ref: '#/components/schemas/TicketPriority'
+            assigned_to:
+              type: array
+              items:
+                type: string
+                format: email
+              description: Updated list of assignee email addresses
+              example: ["alice@example.com", "bob@example.com", "charlie@example.com"]
+      required:
+        - ticket
+
+    AssigneeRequest:
+      type: object
+      properties:
+        assignee:
+          type: string
+          format: email
+          description: Email address of the assignee to add or remove
+          example: "newuser@example.com"
+      required:
+        - assignee
+
+    TicketResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Ticket'
+
+    TicketListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ticket'
+        meta:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: Total number of tickets
+              example: 42
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Ticket not found"
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        errors:
+          type: object
+          description: Validation errors by field
+          example:
+            title: "can't be blank"
+            priority: "is invalid"
+            assigned_to: ["must be valid email addresses", "cannot have more than 50 items"]
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication (not implemented yet)
+
+tags:
+  - name: Tickets
+    description: Ticket management operations

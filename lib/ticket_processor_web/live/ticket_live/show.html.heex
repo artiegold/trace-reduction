@@ -1,0 +1,83 @@
+<.header>
+  Ticket <%= @ticket.id %>
+  <:subtitle>This is a ticket record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/tickets/#{@ticket}/edit"}>
+      <.button>Edit Ticket</.button>
+    </.link>
+    <.link patch={~p"/tickets/#{@ticket}/discard"}>
+      <.button variant="danger">Discard Ticket</.button>
+    </.link>
+    <.link navigate={~p"/tickets"}>
+      <.button variant="outline">Back</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Title"><%= @ticket.title %></:item>
+  <:item title="Description"><%= @ticket.description %></:item>
+  <:item title="Status">
+    <.badge color={status_color(@ticket.status)}>
+      <%= String.upcase(to_string(@ticket.status)) %>
+    </.badge>
+  </:item>
+  <:item title="Priority">
+    <.badge color={priority_color(@ticket.priority)}>
+      <%= String.upcase(to_string(@ticket.priority)) %>
+    </.badge>
+  </:item>
+  <:item title="Assigned To">
+  <%= if length(@ticket.assigned_to) == 0 do %>
+    Unassigned
+  <% else %>
+    <div class="space-x-2">
+      <%= for assignee <- @ticket.assigned_to do %>
+        <.badge color="blue" class="inline-block mr-1"><%= assignee %></.badge>
+      <% end %>
+    </div>
+  <% end %>
+</:item>
+  <:item title="Created"><%= @ticket.created_at %></:item>
+  <:item title="Updated"><%= @ticket.updated_at %></:item>
+</.list>
+
+<div class="mt-6 space-x-4">
+  <.button 
+    phx-click="discard" 
+    phx-disable-with="Discarding..." 
+    variant="danger"
+    class="mr-2"
+  >
+    Discard Ticket
+  </.button>
+  <.link navigate={~p"/tickets"} class="btn btn-outline">Back to tickets</.link>
+</div>
+
+<.modal :if={@live_action == :discard} id="discard-modal" show on_cancel={JS.patch(~p"/tickets/#{@ticket}")}>
+  <div class="space-y-4">
+    <div>
+      <h4 class="font-bold">Are you sure you want to discard this ticket?</h4>
+      <p class="text-sm opacity-70">This action cannot be undone.</p>
+    </div>
+    <.form for={%{}} as={:discard} phx-submit="confirm_discard" phx-target={@myself} class="flex gap-2">
+      <.button type="submit" class="btn-error" phx-disable-with="Discarding...">
+        Yes, Discard Ticket
+      </.button>
+      <.button type="button" phx-click={JS.patch(~p"/tickets/#{@ticket}")} class="btn-outline">
+        Cancel
+      </.button>
+    </.form>
+  </div>
+</.modal>
+
+<.modal :if={@live_action == :edit} id="ticket-modal" show on_cancel={JS.patch(~p"/tickets/#{@ticket}")}>
+  <.live_component
+    module={TicketProcessorWeb.TicketLive.FormComponent}
+    id={@ticket.id}
+    title="Edit Ticket"
+    action={:edit}
+    ticket={@ticket}
+    patch={~p"/tickets/#{@ticket}"}
+  />
+</.modal>

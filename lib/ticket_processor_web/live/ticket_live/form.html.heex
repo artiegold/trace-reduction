@@ -1,0 +1,15 @@
+<.simple_form
+  for={@form}
+  id="ticket-form"
+  phx-target={@myself}
+  phx-change="validate"
+  phx-submit="save"
+>
+  <.input field={@form[:title]} type="text" label="Title" />
+  <.input field={@form[:description]} type="textarea" label="Description" />
+  <.input field={@form[:priority]} type="select" label="Priority" options={priority_options()} />
+  <.input field={@form[:assigned_to]} type="text" label="Assigned To" />
+  <:actions>
+    <.button phx-disable-with="Saving...">Save Ticket</.button>
+  </:actions>
+</.simple_form>

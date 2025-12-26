@@ -1,0 +1,6 @@
+{
+  "installed": [
+    "uuid-ossp",
+    "pg_trgm"
+  ]
+}

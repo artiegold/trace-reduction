@@ -1,0 +1,66 @@
+<.header>
+  Listing Tickets
+  <:subtitle>Manage all support tickets in the system</:subtitle>
+  <:actions>
+    <.link patch={~p"/tickets/new"}>
+      <.button>New Ticket</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="tickets"
+  rows={@streams.tickets}
+  row_click={fn {_id, ticket} -> ~p"/tickets/#{ticket}" end}
+>
+  <:col :let={{_id, ticket}} label="Title"><%= ticket.title %></:col>
+  <:col :let={{_id, ticket}} label="Status">
+    <.badge
+      color={status_color(ticket.status)}
+      class="text-xs"
+    >
+      <%= String.upcase(to_string(ticket.status)) %>
+    </.badge>
+  </:col>
+  <:col :let={{_id, ticket}} label="Priority">
+    <.badge
+      color={priority_color(ticket.priority)}
+      class="text-xs"
+    >
+      <%= String.upcase(to_string(ticket.priority)) %>
+    </.badge>
+  </:col>
+  <:col :let={{_id, ticket}} label="Assigned To">
+  <%= case ticket.assigned_to do
+    [] -> "Unassigned"
+    [single] -> single
+    list -> "#{length(list)} people"
+  end %>
+</:col>
+  <:col :let={{_id, ticket}} label="Created"><%= ticket.created_at %></:col>
+  <:action :let={{_id, ticket}}>
+    <div class="sr-only">
+      <.link navigate={~p"/tickets/#{ticket}"}>Show</.link>
+    </div>
+    <.link patch={~p"/tickets/#{ticket}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{_id, ticket}}>
+    <.link
+      phx-click={JS.push("discard", value: %{id: ticket.id}) |> hide("##{ticket.id}")}
+      data-confirm="Are you sure you want to discard this ticket?"
+    >
+      Discard
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="ticket-modal" show on_cancel={JS.patch(~p"/tickets")}>
+  <.live_component
+    module={TicketProcessorWeb.TicketLive.FormComponent}
+    id={@ticket.id || :new}
+    title={@page_title}
+    action={@live_action}
+    ticket={@ticket}
+    patch={~p"/tickets"}
+  />
+</.modal>
