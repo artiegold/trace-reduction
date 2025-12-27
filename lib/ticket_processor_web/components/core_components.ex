@@ -365,7 +365,9 @@ defmodule TicketProcessorWeb.CoreComponents do
   def table(assigns) do
     assigns =
       with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
-        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+        assigns
+        |> assign(row_id: assigns.row_id || fn {id, _item} -> id end)
+        |> assign(row_item: assigns.row_item || (&Function.identity/1))
       end
 
     ~H"""
@@ -525,7 +527,7 @@ defmodule TicketProcessorWeb.CoreComponents do
   def badge(assigns) do
     ~H"""
     <span class={["badge badge-#{@color}", @class]} {@rest}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </span>
     """
   end
@@ -541,10 +543,17 @@ defmodule TicketProcessorWeb.CoreComponents do
   def back(assigns) do
     ~H"""
     <.link navigate={@navigate} class={["inline-flex items-center gap-1 text-sm link", @class]}>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="w-4 h-4"
+      >
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
       </svg>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </.link>
     """
   end
@@ -583,7 +592,7 @@ defmodule TicketProcessorWeb.CoreComponents do
             ✕
           </button>
         </div>
-        <%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </div>
     </div>
     """

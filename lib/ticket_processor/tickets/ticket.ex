@@ -53,6 +53,10 @@ defmodule TicketProcessor.Tickets.Ticket do
       constraints(max_length: 100)
     end
 
+    attribute :ticket_idea_id, :uuid do
+      allow_nil?(true)
+    end
+
     create_timestamp(:created_at)
     update_timestamp(:updated_at)
   end
@@ -63,7 +67,7 @@ defmodule TicketProcessor.Tickets.Ticket do
     end
 
     create :create do
-      accept([:title, :description, :priority, :assigned_to, :depends_on_person])
+      accept([:title, :description, :priority, :assigned_to, :depends_on_person, :ticket_idea_id])
     end
 
     update :update do
@@ -103,11 +107,11 @@ defmodule TicketProcessor.Tickets.Ticket do
         allow_nil?(false)
         constraints(max_length: 100)
       end
-      
+
       change(fn changeset, _context ->
         assignee = Ash.Changeset.get_argument(changeset, :assignee)
         current_assignees = Ash.Changeset.get_attribute(changeset, :assigned_to) || []
-        
+
         if assignee not in current_assignees do
           Ash.Changeset.change_attribute(changeset, :assigned_to, current_assignees ++ [assignee])
         else
@@ -121,12 +125,16 @@ defmodule TicketProcessor.Tickets.Ticket do
         allow_nil?(false)
         constraints(max_length: 100)
       end
-      
+
       change(fn changeset, _context ->
         assignee = Ash.Changeset.get_argument(changeset, :assignee)
         current_assignees = Ash.Changeset.get_attribute(changeset, :assigned_to) || []
-        
-        Ash.Changeset.change_attribute(changeset, :assigned_to, List.delete(current_assignees, assignee))
+
+        Ash.Changeset.change_attribute(
+          changeset,
+          :assigned_to,
+          List.delete(current_assignees, assignee)
+        )
       end)
     end
 
@@ -134,15 +142,18 @@ defmodule TicketProcessor.Tickets.Ticket do
       argument :ticket, :map do
         allow_nil?(false)
       end
-      
+
       change(fn changeset, _context ->
         ticket_args = Ash.Changeset.get_argument(changeset, :ticket)
-        
+
         changeset
         |> Ash.Changeset.change_attribute(:title, Map.get(ticket_args, "title"))
         |> Ash.Changeset.change_attribute(:description, Map.get(ticket_args, "description"))
         |> Ash.Changeset.change_attribute(:priority, Map.get(ticket_args, "priority"))
-        |> Ash.Changeset.change_attribute(:depends_on_person, Map.get(ticket_args, "depends_on_person"))
+        |> Ash.Changeset.change_attribute(
+          :depends_on_person,
+          Map.get(ticket_args, "depends_on_person")
+        )
       end)
     end
 
@@ -159,7 +170,7 @@ defmodule TicketProcessor.Tickets.Ticket do
     has_many :dependencies, TicketProcessor.Tickets.TicketDependency,
       destination_attribute: :dependent_ticket_id,
       source_attribute: :id
-    
+
     has_many :blocking_tickets, TicketProcessor.Tickets.TicketDependency,
       destination_attribute: :blocking_ticket_id,
       source_attribute: :id

@@ -66,6 +66,31 @@ config :ticket_processor, ash_domains: [TicketProcessor.Tickets]
 # Ash configuration
 config :ash, :use_all_api_sockets?, true
 
+# OpenTelemetry configuration
+config :opentelemetry,
+  span_processor: :batch,
+  exporters: [
+    otlp: [
+      protocol: :grpc,
+      endpoints: [{:http, ~c"localhost", 4317}]
+    ]
+  ]
+
+config :opentelemetry_exporter,
+  otlp_protocol: :grpc
+
+config :opentelemetry_process_propagator,
+  text_map_propagator: :trace_context
+
+config :opentelemetry_phoenix,
+  # Enable Phoenix endpoint instrumentation
+  router: TicketProcessorWeb.Router
+
+# Configure Ecto telemetry for OpenTelemetry
+config :opentelemetry_ecto,
+  comment: :parent,
+  command_prefix: ["TicketProcessor", "Repo"]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

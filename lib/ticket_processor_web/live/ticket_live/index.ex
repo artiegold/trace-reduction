@@ -6,7 +6,8 @@ defmodule TicketProcessorWeb.TicketLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :tickets, Tickets.list_tickets())}
+    {:ok, tickets} = Tickets.list_tickets()
+    {:ok, assign(socket, :tickets, tickets)}
   end
 
   @impl true
@@ -34,7 +35,7 @@ defmodule TicketProcessorWeb.TicketLive.Index do
 
   @impl true
   def handle_info({TicketProcessorWeb.TicketLive.FormComponent, {:saved, ticket}}, socket) do
-    {:noreply, stream_insert(socket, :tickets, ticket)}
+    {:noreply, assign(socket, :tickets, Tickets.list_tickets())}
   end
 
   @impl true
@@ -44,6 +45,6 @@ defmodule TicketProcessorWeb.TicketLive.Index do
     # Discard instead of destroy
     {:ok, _} = Tickets.discard_ticket(ticket)
 
-    {:noreply, stream_delete(socket, :tickets, ticket)}
+    {:noreply, assign(socket, :tickets, Tickets.list_tickets())}
   end
 end

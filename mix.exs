@@ -21,7 +21,7 @@ defmodule TicketProcessor.MixProject do
   def application do
     [
       mod: {TicketProcessor.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :opentelemetry_exporter, :opentelemetry]
     ]
   end
 
@@ -68,7 +68,13 @@ defmodule TicketProcessor.MixProject do
       {:bandit, "~> 1.5"},
       {:ash, "~> 3.0"},
       {:ash_postgres, "~> 2.0"},
-      {:ash_phoenix, "~> 2.0"}
+      {:ash_phoenix, "~> 2.0"},
+      {:opentelemetry_api, "~> 1.4"},
+      {:opentelemetry, "~> 1.4"},
+      {:opentelemetry_exporter, "~> 1.7"},
+      {:opentelemetry_cowboy, "~> 0.2"},
+      {:opentelemetry_phoenix, "~> 1.1"},
+      {:opentelemetry_ecto, "~> 1.1"}
     ]
   end
 
